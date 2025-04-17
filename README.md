@@ -28,5 +28,5 @@ adk run income_tax_agent
 ### Run a API Server
 
 ```
-adk api_server
+adk api_server --allow_origins "*"
 ```
