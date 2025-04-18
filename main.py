@@ -16,9 +16,9 @@ AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Example session DB URL (e.g., SQLite)
 SESSION_DB_URL = "sqlite:///./sessions.db"
 # Example allowed origins for CORS
-ALLOWED_ORIGINS = ["*"]
+ALLOWED_ORIGINS = ("*",)
 # Set web=True if you intend to serve a web interface, False otherwise
-SERVE_WEB_INTERFACE = True
+SERVE_WEB_INTERFACE = False
 
 # JWT Configuration
 JWT_SECRET_KEY = os.environ.get(
@@ -27,7 +27,6 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_MINUTES = 30  # Token expiration time in minutes
 
 # Call the function to get the FastAPI app instance
-# Ensure the agent directory name ('capital_agent') matches your agent folder
 app: FastAPI = get_fast_api_app(
     agent_dir=AGENT_DIR,
     session_db_url=SESSION_DB_URL,
@@ -45,6 +44,12 @@ async def jwt_middleware(request, call_next):
     excluded_paths = ["/list-apps"]
     if any(request.url.path.startswith(path) for path in excluded_paths):
         return await call_next(request)
+
+    # Handle OPTIONS requests properly - allow them through without token check
+    # but ensure other request types are still authenticated
+    if request.method == "OPTIONS":
+        response = await call_next(request)
+        return response
 
     # Extract token from Authorization header
     authorization = request.headers.get("Authorization")

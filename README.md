@@ -15,7 +15,7 @@ uv sync
 ### Run a test web server
 
 ```
-adk web
+adk web --allow_origins "*"
 ```
 
 ### Run a cli 
@@ -31,6 +31,8 @@ adk run income_tax_agent
 adk api_server --allow_origins "*"
 ```
 
+### Run production server
 
-## Deployment
-
+```
+uv run main.py
+```
