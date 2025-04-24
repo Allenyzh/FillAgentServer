@@ -9,6 +9,13 @@
 uv venv
 uv sync
 ```
+3. Install playwright browsers:
+   
+```
+playwright install
+```
+
+
 
 ## Run
 
