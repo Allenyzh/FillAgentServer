@@ -135,7 +135,7 @@ if __name__ == "__main__":
 
             members = await get_all_t5()
             print(members)
-            result = await select_t5("T5: BBC")
+            result = await get_t5_info("T5: BBC")
             print(result)
 
     asyncio.run(main())
