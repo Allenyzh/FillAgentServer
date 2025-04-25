@@ -1,4 +1,4 @@
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 from typing import Optional, Any
 import logging
 
@@ -12,7 +12,7 @@ _context: Optional[Any] = None
 _page: Optional[Any] = None
 
 
-def run(url: str, browser_type: str = "chromium") -> bool:
+async def run(url: str, browser_type: str = "chromium") -> bool:
     """
     Start a browser instance and navigate to the specified URL.
     If browser is already running, it will navigate to the new URL.
@@ -51,12 +51,12 @@ def run(url: str, browser_type: str = "chromium") -> bool:
     # If browser is not initialized, start a new instance
     if _playwright is None:
         logger.info(f"Initializing new {browser_type} browser instance")
-        _playwright = sync_playwright().start()
+        _playwright = await async_playwright().start()
         # Launch the specified browser
         browser_launcher = getattr(_playwright, browser_type)
-        _browser = browser_launcher.launch(headless=False)
-        _context = _browser.new_context()
-        _page = _context.new_page()
+        _browser = await browser_launcher.launch(headless=False)
+        _context = await _browser.new_context()
+        _page = await _context.new_page()
     else:
         logger.debug("Using existing browser instance")
 
@@ -66,23 +66,23 @@ def run(url: str, browser_type: str = "chromium") -> bool:
             logger.warning("Page object is invalid, creating a new page")
             # If context is still valid, try to create a new page
             try:
-                _page = _context.new_page()
+                _page = await _context.new_page()
             except Exception:
                 # If context is not valid, rebuild everything
                 logger.warning("Context is invalid, restarting browser")
-                _browser.close() if _browser else None
-                _playwright.stop() if _playwright else None
-                _playwright = sync_playwright().start()
+                await _browser.close() if _browser else None
+                await _playwright.stop() if _playwright else None
+                _playwright = await async_playwright().start()
                 browser_launcher = getattr(_playwright, browser_type)
-                _browser = browser_launcher.launch(headless=False)
-                _context = _browser.new_context()
-                _page = _context.new_page()
+                _browser = await browser_launcher.launch(headless=False)
+                _context = await _browser.new_context()
+                _page = await _context.new_page()
 
         # Navigate to the URL (whether browser is new or existing) with a timeout
         logger.info(f"Navigating to {url}")
-        _page.goto(url, timeout=30000, wait_until="domcontentloaded")
+        await _page.goto(url, timeout=30000, wait_until="domcontentloaded")
         # Wait for the page to be fully loaded
-        _page.wait_for_load_state("networkidle")
+        await _page.wait_for_load_state("networkidle")
         logger.info(f"Successfully loaded {url}")
         return True
     except Exception as e:
@@ -91,11 +91,11 @@ def run(url: str, browser_type: str = "chromium") -> bool:
         if "thread" in str(e).lower() and "exited" in str(e).lower():
             logger.warning(
                 "Browser thread has exited, will restart on next run")
-            stop()  # This will clean up all resources
+            await stop()  # This will clean up all resources
         return False
 
 
-def stop() -> None:
+async def stop() -> None:
     """
     Close the browser instance if it's running.
     """
@@ -103,12 +103,12 @@ def stop() -> None:
 
     if _browser is not None:
         logger.info("Closing browser")
-        _browser.close()
+        await _browser.close()
         _browser = None
 
     if _playwright is not None:
         logger.info("Stopping playwright")
-        _playwright.stop()
+        await _playwright.stop()
         _playwright = None
 
     # Reset other globals
@@ -117,7 +117,7 @@ def stop() -> None:
     logger.debug("Browser resources cleaned up")
 
 
-def run_browser_tool(url: str) -> bool:
+async def run_browser_tool(url: str) -> bool:
     """
     Start a browser instance and navigate to the specified URL.
 
@@ -127,23 +127,27 @@ def run_browser_tool(url: str) -> bool:
     Returns:
         bool: True if navigation was successful, False otherwise
     """
-    return run(url)
+    return await run(url)
 
 
-def stop_browser_tool() -> None:
+async def stop_browser_tool() -> None:
     """
     Close the browser instance if it's running.
     """
     logger.info("Stopping browser tool")
-    stop()
+    await stop()
 
 
 if __name__ == "__main__":
-    # Example usage
-    run_browser_tool("https://www.ufile.ca/")
-    # To add a delay if needed, you can use time.sleep instead of asyncio.sleep
-    import time
-    time.sleep(10)
+    # Example usage with asyncio
+    import asyncio
 
-    run_browser_tool("https://www.ufile.ca/")
-    # stop_browser_tool()
+    async def main():
+        await run_browser_tool("https://www.ufile.ca/")
+        # Add a delay if needed
+        await asyncio.sleep(10)
+
+        await run_browser_tool("https://www.ufile.ca/")
+        # await stop_browser_tool()
+
+    asyncio.run(main())
