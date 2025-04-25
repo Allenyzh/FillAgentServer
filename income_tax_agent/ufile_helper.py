@@ -24,6 +24,29 @@ async def get_all_members() -> list | str:
     return span_values
 
 
+async def get_all_t5() -> list | str:
+    """
+    Get all T5 slips from the current member.
+
+    Returns:
+        list: A list containing only the T5 slip information
+    """
+    page = playwright_helper._page
+    if page is None:
+        return "Ufile didn't load, please try again"
+
+    # Use a more specific selector that targets only the div elements containing "T5:" text
+    # This targets the exact elements containing T5 labels
+    t5_elements = page.locator('div.tocLabel').filter(has_text='T5:')
+    all_t5s = await t5_elements.all()
+
+    t5_values = []
+    for t5 in all_t5s:
+        t5_values.append(await t5.inner_text())
+
+    return t5_values
+
+
 if __name__ == "__main__":
     import asyncio
 
@@ -59,7 +82,7 @@ if __name__ == "__main__":
                 playwright_helper._context = await playwright_helper._browser.new_context()
                 playwright_helper._page = await playwright_helper._context.new_page()
 
-            members = await get_all_members()
+            members = await get_all_t5()
             print(members)
 
     asyncio.run(main())
