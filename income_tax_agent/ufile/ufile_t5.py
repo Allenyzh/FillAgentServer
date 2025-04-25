@@ -1,29 +1,6 @@
 import playwright_helper
 
 
-async def get_all_members() -> list | str:
-    """
-    Get all members from the current page.
-
-    Returns:
-        list: A dictionary containing the members
-    """
-    page = playwright_helper._page
-    if page is None:
-        return "Ufile didn't load, please try again"
-
-    # Get all spans inside the list items, including both appSelected and applicants classes
-    # Use 'ul.intApps li' to select all list items within the ul.intApps element
-    lis = page.locator('ul.intApps li a span')
-    all_lis = await lis.all()
-
-    span_values = []
-    for li in all_lis:
-        span_values.append(await li.inner_text())
-
-    return span_values
-
-
 async def get_all_t5() -> list | str:
     """
     Get all T5 slips from the current member.
@@ -45,7 +22,6 @@ async def get_all_t5() -> list | str:
         t5_values.append(await t5.inner_text())
 
     return t5_values
-
 
 if __name__ == "__main__":
     import asyncio
