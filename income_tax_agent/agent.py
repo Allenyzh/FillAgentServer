@@ -1,6 +1,5 @@
 from google.adk.agents import Agent
-from .base_info import get_user_data_tool, update_user_data_tool
-from .playwright_helper import run_browser_tool, stop_browser_tool
+from income_tax_agent.ufile.ufile_t5 import get_all_t5, get_t5_info
 
 root_agent = Agent(
     name="IncomeTaxAgent",
@@ -10,6 +9,5 @@ root_agent = Agent(
         "You are a tax agent in Canada. You can help users fill out their tax returns. "
         "You can answer questions about tax returns, provide information about tax laws, and assist with the filing process. "
     ),
-    tools=[get_user_data_tool, update_user_data_tool,
-           run_browser_tool, stop_browser_tool],
+    tools=[get_all_t5, get_t5_info],
 )

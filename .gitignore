@@ -175,3 +175,4 @@ cython_debug/
 
 form_data.json
 sessions.db
+docs/test.html

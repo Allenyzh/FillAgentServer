@@ -87,13 +87,47 @@ async def get_page() -> Optional[Any]:
         Optional[Any]: The current page object or None if not available
     """
     global _page
+    if _playwright is None:
+        logger.warning("Playwright is not initialized")
+        await connect_to_browser("http://localhost:3000/")
+
     if _page is None:
-        if await run("https://www.ufile.ca/"):
-            logger.info("Page initialized successfully")
-            return _page
+        logger.error("Failed to initialize page")
+        return None
+    return _page
+
+
+async def connect_to_browser(instance_address: str) -> None:
+    """
+    Connect to an existing browser instance using the specified address.
+
+    Args:
+        instance_address: The address of the existing browser instance
+    """
+    global _playwright, _browser, _context, _page
+
+    if _playwright is None:
+        logger.info("Connecting to existing browser instance")
+        _playwright = await async_playwright().start()
+        _browser = await _playwright.chromium.connect_over_cdp(instance_address)
+        contexts = _browser.contexts
+        if contexts:
+            _context = contexts[0]
+            pages = _context.pages
+            if pages:
+                _page = pages[0]
+                logger.info(f"Connected to existing page: {await _page.title()}")
+            else:
+                logger.warning(
+                    "No pages found in the context. Creating a new page.")
+                _page = await _context.new_page()
         else:
-            logger.error("Failed to initialize page")
-            return None
+            logger.warning(
+                "No contexts found. Creating a new context and page.")
+            _context = await _browser.new_context()
+            _page = await _context.new_page()
+    else:
+        logger.debug("Already connected to a browser instance")
 
 
 async def stop() -> None:
