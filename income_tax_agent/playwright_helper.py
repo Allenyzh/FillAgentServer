@@ -32,24 +32,8 @@ async def run(url: str, browser_type: str = "chromium") -> bool:
             f"Invalid browser type: {browser_type}. Using chromium instead.")
         browser_type = "chromium"
 
-    # Check if browser is still alive if it was initialized
-    if _browser is not None:
-        try:
-            # Additional check to see if the browser has been manually closed
-            if not _browser.is_connected():
-                logger.warning(
-                    "Browser or context appears to be closed manually")
-                raise Exception("Browser context is no longer valid")
-        except Exception as e:
-            logger.warning(f"Browser instance appears to be dead: {str(e)}")
-            # Clean up the dead browser references
-            _browser = None
-            _context = None
-            _page = None
-            _playwright = None
-
     # If browser is not initialized, start a new instance
-    if _playwright is None:
+    if _browser is None and _playwright is None:
         logger.info(f"Initializing new {browser_type} browser instance")
         _playwright = await async_playwright().start()
         # Launch the specified browser
@@ -93,6 +77,23 @@ async def run(url: str, browser_type: str = "chromium") -> bool:
                 "Browser thread has exited, will restart on next run")
             await stop()  # This will clean up all resources
         return False
+
+
+async def get_page() -> Optional[Any]:
+    """
+    Get the current page object.
+
+    Returns:
+        Optional[Any]: The current page object or None if not available
+    """
+    global _page
+    if _page is None:
+        if await run("https://www.ufile.ca/"):
+            logger.info("Page initialized successfully")
+            return _page
+        else:
+            logger.error("Failed to initialize page")
+            return None
 
 
 async def stop() -> None:

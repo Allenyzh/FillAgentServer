@@ -15,7 +15,12 @@ uv sync
 playwright install
 ```
 
+## Development
 
+### Development ufile_helper
+
+1. Run the `test_server.py` to start the test server:
+2. Run your `playwright_helper.py` in a separate terminal.
 
 ## Run
 
