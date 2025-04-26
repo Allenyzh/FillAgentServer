@@ -7,17 +7,18 @@ load_dotenv()
 
 username = os.getenv("UFILE_USERNAME")
 password = os.getenv("UFILE_PASSWORD")
+playwright_port = os.getenv("PLAYWRIGHT_PORT", 9300)
 
 
 async def main():
-    custom_port = 9300
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(
             headless=False,
-            args=[f'--remote-debugging-port={custom_port}'],
+            args=[f'--remote-debugging-port={playwright_port}'],
         )
-        print(f"Playwright instance address: http://localhost:{custom_port}")
+        print(
+            f"Playwright instance address: http://localhost:{playwright_port}")
 
         # Create a page
         page = await browser.new_page()

@@ -1,4 +1,9 @@
 from income_tax_agent import playwright_helper
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+playwright_port = os.getenv("PLAYWRIGHT_PORT", 9300)
 
 
 async def get_all_members() -> list | str:
@@ -33,7 +38,7 @@ if __name__ == "__main__":
         # The correct format for connecting to Chrome DevTools Protocol is:
         # ws://localhost:<port>/devtools/browser/<id>
         # But for Playwright, you can use this simpler format:
-        instance_address = 'http://localhost:9300/'
+        instance_address = f'http://localhost:{playwright_port}/'
 
         async with async_playwright() as p:
             playwright_helper._playwright = p
