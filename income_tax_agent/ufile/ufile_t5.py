@@ -24,6 +24,33 @@ async def get_all_t5() -> list | str:
     return t5_values
 
 
+async def add_t5(name: str) -> str:
+    """
+    Add a new T5 slip to the current member.
+
+    Args:
+        name: The name of the T5 slip to add (e.g., "T5: BBC")
+
+    Returns:
+        str: A message indicating whether the operation was successful or not
+    """
+    page = await playwright_helper.get_page()
+    if page is None:
+        return "Ufile didn't load, please try again"
+
+    # Click on the "Interest, investment income and carrying charges" div
+    await page.get_by_role("button", name="Interest, investment income").first.click()
+    await page.wait_for_timeout(1000)  # Wait for the UI to update
+    # Click on the "T5 - Investment" add button
+    await page.get_by_role("button", name="Add Item. T5 - Investment").click()
+    await page.wait_for_timeout(1000)  # Wait for the UI to update
+    # Input the name of the T5 slip
+    await page.get_by_role(
+        "textbox", name="Enter Text. This T5 slip was").fill(name)
+
+    return f"Successfully added T5 slip: {name}"
+
+
 async def update_t5(name: str, title: str, box: str, value: str) -> str:
     """
     Update a specific T5 slip by its name.
@@ -113,17 +140,17 @@ async def remove_t5(name: str) -> str:
         remove_button = page.locator(
             f'button.tocIconRemove[aria-hidden="false"][aria-label*="{name}"]').first
         await page.evaluate("""
-            window.originalConfirm = window.confirm; // 保存原始函数 (可选，用于恢复)
+            window.originalConfirm = window.confirm; // store the original confirm function, optional
             window.confirm = function(message) {
                 console.log('Intercepted confirm: "' + message + '". Returning true.');
-                return true; // 直接返回 true，模拟点击 OK
+                return true; // directly return true to simulate user confirmation
             };
         """)
 
         # Debug: Check if button is found and visible
-        if await remove_button.count() == 0:
-            remove_button = page.locator(
-                f'button.tocIconRemove[aria-label*="{name}"]')
+        # if await remove_button.count() == 0:
+        #     remove_button = page.locator(
+        #         f'button.tocIconRemove[aria-label*="{name}"]')
         # Click the remove button
         await remove_button.click()
         return f"Successfully removed T5 slip: {name}"
@@ -152,9 +179,9 @@ async def get_t5_info(name: str) -> str | list[dict]:
     if page is None:
         return "Ufile didn't load, please try again"
 
-    # Use a more specific selector that targets only the div elements containing "T5:" text
-    # This targets the exact elements containing T5 labels
-    t5_elements = page.locator('div.tocLabel').filter(has_text='T5:')
+    # Filter for elements that start with either 'T5: ' or 'T5 '
+    t5_elements = page.locator('div.tocLabel').filter(lambda el:
+                                                      el.inner_text().startswith('T5: ') or el.inner_text().startswith('T5 '))
     all_t5s = await t5_elements.all()
 
     t5_found = False
@@ -211,11 +238,13 @@ if __name__ == "__main__":
     from playwright.async_api import async_playwright
 
     async def main():
-        #members = await get_all_t5()
-        #print(members)
+        members = await get_all_t5()
+        print(members)
         # result = await get_t5_info("T5: BBC")
-        #print(result)
-        result = await remove_t5("Interest")
+        # print(result)
+        result = await remove_t5("T5: abcd")
         print(result)
+        # result = await add_t5("abcd")
+        # print(result)
 
     asyncio.run(main())
