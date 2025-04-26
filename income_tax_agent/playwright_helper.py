@@ -1,9 +1,13 @@
 from playwright.async_api import async_playwright
 from typing import Optional, Any
 import logging
-
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+playwright_port = os.getenv("PLAYWRIGHT_PORT", 9300)
 
 # Global variables to store browser instance and related objects
 _playwright: Optional[Any] = None
@@ -89,7 +93,7 @@ async def get_page() -> Optional[Any]:
     global _page
     if _playwright is None:
         logger.warning("Playwright will be initialized")
-        await connect_to_browser("http://localhost:9300/")
+        await connect_to_browser(f"http://localhost:{playwright_port}")
 
     if _page is None:
         logger.error("Failed to initialize page")
