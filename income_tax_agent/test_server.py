@@ -4,12 +4,12 @@ import sys
 
 
 async def main():
-    custom_port = 3000
+    custom_port = 9300
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(
             headless=False,
-            args=[f'--remote-debugging-port={custom_port}']
+            args=[f'--remote-debugging-port={custom_port}'],
         )
         print(f"Playwright instance address: http://localhost:{custom_port}")
 

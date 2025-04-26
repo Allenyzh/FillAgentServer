@@ -33,7 +33,7 @@ if __name__ == "__main__":
         # The correct format for connecting to Chrome DevTools Protocol is:
         # ws://localhost:<port>/devtools/browser/<id>
         # But for Playwright, you can use this simpler format:
-        instance_address = 'http://localhost:3000/'
+        instance_address = 'http://localhost:9300/'
 
         async with async_playwright() as p:
             playwright_helper._playwright = p
