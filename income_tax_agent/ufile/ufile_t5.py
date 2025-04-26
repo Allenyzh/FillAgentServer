@@ -106,7 +106,7 @@ if __name__ == "__main__":
     async def main():
         members = await get_all_t5()
         print(members)
-        result = await get_t5_info("T5: BBC")
+        result = await get_t5_info("T5: RBC")
         print(result)
 
     asyncio.run(main())
