@@ -24,6 +24,113 @@ async def get_all_t5() -> list | str:
     return t5_values
 
 
+async def update_t5(name: str, title: str, box: str, value: str) -> str:
+    """
+    Update a specific T5 slip by its name.
+
+    This function navigates to the specified T5 slip and updates the input field with the provided value.
+
+    Args:
+        name: The name of the T5 slip to update (e.g., "T5: BBC")
+        title: The title of the input field to update
+        box: The box number of the input field to update
+        value: The new value to set in the input field
+
+    Returns:
+        str: A message indicating whether the operation was successful or not
+    """
+    page = await playwright_helper.get_page()
+    if page is None:
+        return "Ufile didn't load, please try again"
+
+    # Find the T5 element with the given name
+    t5_elements = page.locator('div.tocLabel').filter(has_text=name)
+    count = await t5_elements.count()
+
+    if count == 0:
+        return f"T5 slip with name '{name}' not found."
+
+    # Get the main container element for this T5
+    t5_element = t5_elements.first
+
+    try:
+        # Click directly on the T5 to make sure it's selected
+        await t5_element.click()
+        await page.wait_for_timeout(500)  # Give more time for the UI to update
+
+        # Find all fieldsets that contain input fields (similar to the test.html structure)
+        fieldsets = page.locator('fieldset')
+        count = await fieldsets.count()
+
+        # Process each fieldset individually
+        for i in range(count):
+            fieldset = fieldsets.nth(i)
+            item = {}
+
+            # Try to find the title/label
+            title_element = fieldset.locator('.int-label').first
+            title_text = await title_element.inner_text() if await title_element.count() > 0 else ""
+
+            # Check if this is the correct fieldset based on title and box number
+            if title_text == title and box in title_text:
+                # Try to find the input value
+                input_element = fieldset.locator('input[type="text"]').first
+                if await input_element.count() > 0:
+                    await input_element.fill(value)
+                    return f"Successfully updated T5 slip: {name} - {title} (Box {box})"
+                else:
+                    return f"Input element not found for T5 slip: {name} - {title} (Box{box})"
+        return f"Fieldset with title '{title}' and box '{box}' not found in T5 slip: {name}."
+    except Exception as e:
+        return f"Error updating T5 slip: {str(e)}"
+
+
+async def remove_t5(name: str) -> str:
+    """
+    Remove a specific T5 slip by its name.
+
+    This function navigates to the specified T5 slip and removes it from the current member.
+
+    Args:
+        name: The name of the T5 slip to remove (e.g., "T5: BBC")
+
+    Returns:
+        str: A message indicating whether the operation was successful or not
+    """
+    page = await playwright_helper.get_page()
+    if page is None:
+        return "Ufile didn't load, please try again"
+
+    # Find the T5 element with the given name
+    t5_elements = page.locator('div.tocLabel').filter(has_text=name)
+    count = await t5_elements.count()
+
+    if count == 0:
+        return f"T5 slip with name '{name}' not found."
+
+    try:
+
+        remove_button = page.locator(
+            f'button.tocIconRemove[aria-hidden="false"][aria-label*="{name}"]').first
+        await page.evaluate("""
+            window.originalConfirm = window.confirm; // 保存原始函数 (可选，用于恢复)
+            window.confirm = function(message) {
+                console.log('Intercepted confirm: "' + message + '". Returning true.');
+                return true; // 直接返回 true，模拟点击 OK
+            };
+        """)
+
+        # Debug: Check if button is found and visible
+        if await remove_button.count() == 0:
+            remove_button = page.locator(
+                f'button.tocIconRemove[aria-label*="{name}"]')
+        # Click the remove button
+        await remove_button.click()
+        return f"Successfully removed T5 slip: {name}"
+    except Exception as e:
+        return f"Error updating T5 slip: {str(e)}"
+
+
 async def get_t5_info(name: str) -> str | list[dict]:
     """
     Select a specific T5 slip by its name and extract all input fields information.
@@ -104,9 +211,11 @@ if __name__ == "__main__":
     from playwright.async_api import async_playwright
 
     async def main():
-        members = await get_all_t5()
-        print(members)
-        result = await get_t5_info("T5: RBC")
+        #members = await get_all_t5()
+        #print(members)
+        # result = await get_t5_info("T5: BBC")
+        #print(result)
+        result = await remove_t5("Interest")
         print(result)
 
     asyncio.run(main())
