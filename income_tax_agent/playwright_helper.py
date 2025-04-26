@@ -88,8 +88,8 @@ async def get_page() -> Optional[Any]:
     """
     global _page
     if _playwright is None:
-        logger.warning("Playwright is not initialized")
-        await connect_to_browser("http://localhost:3000/")
+        logger.warning("Playwright will be initialized")
+        await connect_to_browser("http://localhost:9300/")
 
     if _page is None:
         logger.error("Failed to initialize page")
