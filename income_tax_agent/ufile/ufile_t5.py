@@ -113,17 +113,17 @@ async def remove_t5(name: str) -> str:
         remove_button = page.locator(
             f'button.tocIconRemove[aria-hidden="false"][aria-label*="{name}"]').first
         await page.evaluate("""
-            window.originalConfirm = window.confirm; // 保存原始函数 (可选，用于恢复)
+            window.originalConfirm = window.confirm; // store the original confirm function, optional
             window.confirm = function(message) {
                 console.log('Intercepted confirm: "' + message + '". Returning true.');
-                return true; // 直接返回 true，模拟点击 OK
+                return true; // directly return true to simulate user confirmation
             };
         """)
 
         # Debug: Check if button is found and visible
-        if await remove_button.count() == 0:
-            remove_button = page.locator(
-                f'button.tocIconRemove[aria-label*="{name}"]')
+        # if await remove_button.count() == 0:
+        #     remove_button = page.locator(
+        #         f'button.tocIconRemove[aria-label*="{name}"]')
         # Click the remove button
         await remove_button.click()
         return f"Successfully removed T5 slip: {name}"
@@ -152,9 +152,9 @@ async def get_t5_info(name: str) -> str | list[dict]:
     if page is None:
         return "Ufile didn't load, please try again"
 
-    # Use a more specific selector that targets only the div elements containing "T5:" text
-    # This targets the exact elements containing T5 labels
-    t5_elements = page.locator('div.tocLabel').filter(has_text='T5:')
+    # Filter for elements that start with either 'T5: ' or 'T5 '
+    t5_elements = page.locator('div.tocLabel').filter(lambda el:
+                                                      el.inner_text().startswith('T5: ') or el.inner_text().startswith('T5 '))
     all_t5s = await t5_elements.all()
 
     t5_found = False
@@ -211,11 +211,11 @@ if __name__ == "__main__":
     from playwright.async_api import async_playwright
 
     async def main():
-        #members = await get_all_t5()
-        #print(members)
+        members = await get_all_t5()
+        print(members)
         # result = await get_t5_info("T5: BBC")
-        #print(result)
-        result = await remove_t5("Interest")
+        # print(result)
+        result = await remove_t5("T5: BBC")
         print(result)
 
     asyncio.run(main())
