@@ -108,73 +108,27 @@ async def remove_t5(name: str) -> str:
     if count == 0:
         return f"T5 slip with name '{name}' not found."
 
-    # Get the main container element for this T5
-    t5_element = t5_elements.first
-
     try:
-        # Click directly on the T5 to make sure it's selected
-        await t5_element.click()
-        await page.wait_for_timeout(500)  # Give more time for the UI to update
 
-        # Based on the test.html structure, find the remove button
-        # Look for buttons with class 'tocIconRemove' that are visible and have the correct aria-label
-        # We need to be more specific with our selector
         remove_button = page.locator(
             f'button.tocIconRemove[aria-hidden="false"][aria-label*="{name}"]').first
+        await page.evaluate("""
+            window.originalConfirm = window.confirm; // 保存原始函数 (可选，用于恢复)
+            window.confirm = function(message) {
+                console.log('Intercepted confirm: "' + message + '". Returning true.');
+                return true; // 直接返回 true，模拟点击 OK
+            };
+        """)
 
         # Debug: Check if button is found and visible
         if await remove_button.count() == 0:
-            # Try a more general approach if the specific one fails
             remove_button = page.locator(
                 f'button.tocIconRemove[aria-label*="{name}"]')
-            # Filter for visible buttons only
-            # visible_buttons = await remove_button.filter(is_visible=True).all()
-            # if not visible_buttons:
-            #     return f"Remove button for '{name}' is not visible or not found"
-            # remove_button = visible_buttons[0]
-
-        page.once("dialog", lambda dialog: print(
-            f"Dialog message: {dialog.message}"))
-        page.once("dialog", lambda dialog: print(
-            f"Dialog type: {dialog.type}"))
-        page.once("dialog", lambda dialog: dialog.accept())
-
         # Click the remove button
         await remove_button.click()
-
         return f"Successfully removed T5 slip: {name}"
     except Exception as e:
-        # Try another approach if the first one failed
-        try:
-            # Get all remove buttons and filter for the one we need
-            all_remove_buttons = page.locator('button.tocIconRemove').all()
-            buttons = await all_remove_buttons
-
-            for button in buttons:
-                aria_label = await button.get_attribute('aria-label')
-                is_visible = await button.is_visible()
-                is_hidden = await button.get_attribute('hidden')
-
-                # Check if this button corresponds to our T5 and is visible
-                if aria_label and name in aria_label and is_visible and not is_hidden:
-                    await button.click()
-                    await page.wait_for_timeout(500)
-
-                    # Check for confirmation dialog
-                    ok_button = page.locator(
-                        'button:has-text("OK"), button:has-text("Ok"), button:has-text("Confirm"), .confirm-btn, .ok-btn').first
-
-                    if await ok_button.count() > 0:
-                        await ok_button.click()
-                        await page.wait_for_timeout(500)
-
-                    return f"Successfully removed T5 slip: {name} (alternative method)"
-
-            return f"Could not find a visible remove button for: {name}"
-        except Exception as inner_e:
-            return f"Error during alternative removal attempt: {str(inner_e)}"
-
-        return f"Error removing T5 slip: {str(e)}"
+        return f"Error updating T5 slip: {str(e)}"
 
 
 async def get_t5_info(name: str) -> str | list[dict]:
@@ -257,11 +211,11 @@ if __name__ == "__main__":
     from playwright.async_api import async_playwright
 
     async def main():
-        # members = await get_all_t5()
-        # print(members)
-        result = await get_t5_info("T5: BBC")
+        #members = await get_all_t5()
+        #print(members)
+        # result = await get_t5_info("T5: BBC")
+        #print(result)
+        result = await remove_t5("Interest")
         print(result)
-        # result = await remove_t5("T5 investment income")
-        # print(result)
 
     asyncio.run(main())
