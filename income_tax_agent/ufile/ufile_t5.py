@@ -24,6 +24,33 @@ async def get_all_t5() -> list | str:
     return t5_values
 
 
+async def add_t5(name: str) -> str:
+    """
+    Add a new T5 slip to the current member.
+
+    Args:
+        name: The name of the T5 slip to add (e.g., "T5: BBC")
+
+    Returns:
+        str: A message indicating whether the operation was successful or not
+    """
+    page = await playwright_helper.get_page()
+    if page is None:
+        return "Ufile didn't load, please try again"
+
+    # Click on the "Interest, investment income and carrying charges" div
+    await page.get_by_role("button", name="Interest, investment income").first.click()
+    await page.wait_for_timeout(1000)  # Wait for the UI to update
+    # Click on the "T5 - Investment" add button
+    await page.get_by_role("button", name="Add Item. T5 - Investment").click()
+    await page.wait_for_timeout(1000)  # Wait for the UI to update
+    # Input the name of the T5 slip
+    await page.get_by_role(
+        "textbox", name="Enter Text. This T5 slip was").fill(name)
+
+    return f"Successfully added T5 slip: {name}"
+
+
 async def update_t5(name: str, title: str, box: str, value: str) -> str:
     """
     Update a specific T5 slip by its name.
@@ -215,7 +242,9 @@ if __name__ == "__main__":
         print(members)
         # result = await get_t5_info("T5: BBC")
         # print(result)
-        result = await remove_t5("T5: BBC")
+        result = await remove_t5("T5: abcd")
         print(result)
+        # result = await add_t5("abcd")
+        # print(result)
 
     asyncio.run(main())
